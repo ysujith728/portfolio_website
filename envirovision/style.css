@@ -1,0 +1,253 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@400;700;900&display=swap');
+
+:root {
+  /* Color Palette */
+  --forest-green: #27ae60;
+  --forest-green-light: #2ecc71;
+  --forest-green-dark: #1e8449;
+  --deep-blue: #0a3d62;
+  --deep-blue-light: #0c2461;
+  --white: #ffffff;
+  --light-gray: #f1f2f6;
+  --medium-gray: #a4b0be;
+  --dark-text: #2f3542;
+  
+  /* Fonts */
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: #555; /* Dark background to contrast A4 white sheets */
+  color: var(--dark-text);
+  line-height: 1.6;
+}
+
+/* Print Specific Rules */
+@page {
+  size: A4 landscape;
+  margin: 0;
+}
+
+/* Page Container */
+.page {
+  width: 297mm;
+  height: 210mm;
+  background-color: var(--white);
+  margin: 10mm auto; /* For screen viewing */
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+@media print {
+  body {
+    background-color: transparent;
+  }
+  .page {
+    margin: 0;
+    box-shadow: none;
+    page-break-after: always;
+  }
+}
+
+/* Typography */
+h1, h2, h3, h4 {
+  font-family: var(--font-heading);
+  color: var(--deep-blue);
+  line-height: 1.2;
+}
+
+h1 { font-size: 3.5rem; font-weight: 900; }
+h2 { font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; }
+h3 { font-size: 1.5rem; font-weight: 600; color: var(--forest-green); }
+p { font-size: 1rem; color: var(--dark-text); margin-bottom: 1rem; }
+
+/* Grid Layouts - Common */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 100%;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+.content-section {
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.image-section {
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.image-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(to right, rgba(10, 61, 98, 0.8), rgba(10, 61, 98, 0.2));
+}
+
+/* Decorative Elements */
+.accent-line {
+  width: 100px;
+  height: 6px;
+  background-color: var(--forest-green);
+  margin: 1.5rem 0;
+  border-radius: 3px;
+}
+
+.page-number {
+  position: absolute;
+  bottom: 2rem;
+  right: 3rem;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--medium-gray);
+  font-size: 1.2rem;
+}
+
+.page-header {
+  position: absolute;
+  top: 2rem;
+  left: 3rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-logo {
+  font-family: var(--font-heading);
+  font-weight: 900;
+  color: var(--deep-blue);
+  font-size: 1.2rem;
+  letter-spacing: 1px;
+}
+
+.header-logo span {
+  color: var(--forest-green);
+}
+
+/* Page 1: Cover Specific */
+.cover-page {
+  background-image: url('assets/cover_drone.png'); /* Dynamic Replace */
+  background-size: cover;
+  background-position: center;
+  color: var(--white);
+  justify-content: space-between;
+  padding: 4rem;
+}
+
+.cover-overlay {
+  position: absolute;
+  top:0; left:0; right:0; bottom:0;
+  background: linear-gradient(135deg, rgba(10, 61, 98, 0.9) 0%, rgba(39, 174, 96, 0.6) 100%);
+  z-index: 1;
+}
+
+.cover-content {
+  position: relative;
+  z-index: 2;
+  margin-top: auto;
+  max-width: 60%;
+}
+
+.cover-content h1 {
+  color: var(--white);
+  font-size: 5rem;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  text-shadow: 2px 4px 10px rgba(0,0,0,0.3);
+}
+
+.cover-content .subtitle {
+  font-size: 2rem;
+  font-family: var(--font-heading);
+  font-weight: 400;
+  color: var(--forest-green-light);
+  margin-bottom: 2rem;
+}
+
+.company-badge {
+  display: inline-block;
+  background-color: rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
+  padding: 1rem 2rem;
+  border-left: 4px solid var(--forest-green-light);
+  font-size: 1.2rem;
+  font-weight: 600;
+  border-radius: 0 8px 8px 0;
+}
+
+/* Infographic Cards */
+.info-card {
+  background-color: var(--light-gray);
+  padding: 2rem;
+  border-radius: 12px;
+  border-top: 4px solid var(--deep-blue);
+  transition: transform 0.3s ease;
+}
+
+.info-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.info-icon {
+  font-size: 3rem;
+  color: var(--forest-green);
+  margin-bottom: 1.5rem;
+}
+
+.stat-number {
+  font-size: 3rem;
+  font-family: var(--font-heading);
+  font-weight: 900;
+  color: var(--deep-blue);
+  margin-bottom: 0.5rem;
+}
+
+/* Architecture & Workflow diagrams placeholder */
+.diagram-container {
+  width: 100%;
+  height: 300px;
+  background-color: var(--light-gray);
+  border: 2px dashed var(--medium-gray);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2rem;
+  color: var(--medium-gray);
+  font-weight: 600;
+}
+
+/* Responsive elements */
+.badge {
+  background: var(--deep-blue);
+  color: var(--white);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: inline-block;
+  margin-bottom: 1rem;
+}
