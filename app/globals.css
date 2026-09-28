@@ -67,6 +67,19 @@ body {
   animation: pulseSlow 4s ease-in-out infinite;
 }
 
+@keyframes impactShake {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-3px, 2px) rotate(-0.3deg); }
+  40% { transform: translate(3px, -2px) rotate(0.3deg); }
+  60% { transform: translate(-2px, 1px); }
+  80% { transform: translate(1px, -1px); }
+  100% { transform: translate(0, 0); }
+}
+
+.animate-impact-shake {
+  animation: impactShake 0.22s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
 /* Accessibility for prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {

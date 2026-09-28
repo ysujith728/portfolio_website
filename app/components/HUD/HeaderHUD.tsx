@@ -10,6 +10,7 @@ interface HeaderHUDProps {
   soundMuted: boolean;
   onToggleSound: () => void;
   systemStatus: string;
+  onOpenCommandPalette?: () => void;
 }
 
 export const HeaderHUD: React.FC<HeaderHUDProps> = ({
@@ -18,6 +19,7 @@ export const HeaderHUD: React.FC<HeaderHUDProps> = ({
   soundMuted,
   onToggleSound,
   systemStatus,
+  onOpenCommandPalette,
 }) => {
   const [timeStr, setTimeStr] = useState<string>("");
 
@@ -87,6 +89,24 @@ export const HeaderHUD: React.FC<HeaderHUDProps> = ({
 
       {/* Right Tactical Control Toggles */}
       <div className="flex items-center gap-2 sm:gap-3">
+        {/* Command Palette Trigger */}
+        {onOpenCommandPalette && (
+          <button
+            type="button"
+            onClick={() => {
+              soundEngine.playClick();
+              onOpenCommandPalette();
+            }}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-cyan-500/40 bg-cyan-950/30 hover:bg-cyan-900/40 text-cyan-300 text-xs font-mono transition-all cursor-pointer shadow-[0_0_10px_rgba(0,240,255,0.2)]"
+            title="Open Command Palette (Ctrl+K or /)"
+          >
+            <span className="text-[11px] font-semibold hidden sm:inline">PALETTE</span>
+            <kbd className="px-1.5 py-0.2 rounded bg-black/60 border border-cyan-500/40 text-[10px] text-cyan-300 font-mono">
+              ⌘K
+            </kbd>
+          </button>
+        )}
+
         {/* Sound FX Toggle */}
         <button
           type="button"
@@ -136,3 +156,4 @@ export const HeaderHUD: React.FC<HeaderHUDProps> = ({
     </header>
   );
 };
+

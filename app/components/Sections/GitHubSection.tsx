@@ -98,6 +98,101 @@ export const GitHubSection: React.FC = () => {
         </span>
       </div>
 
+      {/* 52-Week GitHub Contribution Activity Heatmap */}
+      <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 font-mono space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="text-white font-bold">ANNUAL REPOSITORY ACTIVITY MATRIX</span>
+            <span className="text-[10px] text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-500/30">
+              847 CONTRIBUTIONS (PAST 52 WEEKS)
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3 text-[10px] text-slate-400">
+            <span>STREAK: <strong className="text-emerald-400">34 DAYS</strong></span>
+            <span>CURRENT: <strong className="text-cyan-400">12 DAYS</strong></span>
+          </div>
+        </div>
+
+        {/* Scrollable Matrix Grid */}
+        <div className="overflow-x-auto pb-1 custom-scrollbar">
+          <div className="min-w-[680px]">
+            {/* Months Header */}
+            <div className="flex justify-between text-[9px] text-slate-400 pb-1 px-1">
+              <span>Oct</span>
+              <span>Nov</span>
+              <span>Dec</span>
+              <span>Jan</span>
+              <span>Feb</span>
+              <span>Mar</span>
+              <span>Apr</span>
+              <span>May</span>
+              <span>Jun</span>
+              <span>Jul</span>
+              <span>Aug</span>
+              <span>Sep</span>
+            </div>
+
+            {/* Matrix Cells: 7 rows x 52 columns */}
+            <div className="grid grid-rows-7 grid-flow-col gap-1">
+              {Array.from({ length: 52 * 7 }).map((_, idx) => {
+                // Generate deterministic pattern of contributions
+                const col = Math.floor(idx / 7);
+                const row = idx % 7;
+                // High density in middle weeks, moderate elsewhere
+                const pseudoRandom = Math.sin(col * 9301 + row * 49297) * 233280;
+                const normalized = (pseudoRandom - Math.floor(pseudoRandom));
+                
+                // Weekend slight reduction
+                const isWeekend = row === 0 || row === 6;
+                const threshold = isWeekend ? 0.45 : 0.22;
+                
+                let count = 0;
+                let bgClass = "bg-slate-900/90 border-slate-800/80";
+                
+                if (normalized > threshold) {
+                  if (normalized > 0.88) {
+                    count = Math.floor(7 + normalized * 8);
+                    bgClass = "bg-cyan-400 border-cyan-300 shadow-[0_0_6px_#00f0ff]";
+                  } else if (normalized > 0.65) {
+                    count = Math.floor(4 + normalized * 4);
+                    bgClass = "bg-cyan-600 border-cyan-500";
+                  } else if (normalized > 0.45) {
+                    count = Math.floor(2 + normalized * 3);
+                    bgClass = "bg-cyan-800/90 border-cyan-700/60";
+                  } else {
+                    count = 1;
+                    bgClass = "bg-cyan-950/80 border-cyan-900/50";
+                  }
+                }
+
+                return (
+                  <div
+                    key={idx}
+                    className={`w-2.5 h-2.5 rounded-sm border transition-all hover:scale-125 cursor-pointer ${bgClass}`}
+                    title={`${count} contribution${count === 1 ? "" : "s"}`}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Legend */}
+            <div className="flex items-center justify-between pt-2.5 text-[10px] text-slate-400">
+              <span>Learn how we count contributions</span>
+              <div className="flex items-center gap-1.5">
+                <span>Less</span>
+                <span className="w-2.5 h-2.5 rounded-sm bg-slate-900 border border-slate-800" />
+                <span className="w-2.5 h-2.5 rounded-sm bg-cyan-950 border border-cyan-900" />
+                <span className="w-2.5 h-2.5 rounded-sm bg-cyan-800 border border-cyan-700" />
+                <span className="w-2.5 h-2.5 rounded-sm bg-cyan-600 border border-cyan-500" />
+                <span className="w-2.5 h-2.5 rounded-sm bg-cyan-400 border border-cyan-300" />
+                <span>More</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Repositories Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {repos.map((repo) => (

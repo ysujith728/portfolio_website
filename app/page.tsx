@@ -26,6 +26,7 @@ import { GitHubSection } from "./components/Sections/GitHubSection";
 import { ResumeSection } from "./components/Sections/ResumeSection";
 import { ContactSection } from "./components/Sections/ContactSection";
 import { AIAssistantSection } from "./components/Sections/AIAssistantSection";
+import { CommandPalette } from "./components/HUD/CommandPalette";
 
 interface ActiveProjectile {
   tool: ToolInfo;
@@ -38,6 +39,8 @@ export default function Home() {
   const [hasBooted, setHasBooted] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [soundMuted, setSoundMuted] = useState(false);
+  const [screenShake, setScreenShake] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
   // Agent State Machine
   const [agentState, setAgentState] = useState<AgentState>("IDLE");
@@ -76,6 +79,32 @@ export default function Home() {
         setReducedMotion(true);
       }
     }
+  }, []);
+
+  // Global Keyboard Shortcuts (Ctrl+K, Cmd+K, /)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't intercept if user is typing in an active input or textarea
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        soundEngine.playClick();
+        setIsCommandPaletteOpen((prev) => !prev);
+      } else if (e.key === "/" && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        soundEngine.playClick();
+        setIsCommandPaletteOpen(true);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   const addLog = useCallback((log: string) => {
@@ -197,6 +226,12 @@ export default function Home() {
     if (!activeProjectile) return;
     const dest = activeProjectile.destination;
 
+    // Cinematic screen shake on projectile impact
+    if (!reducedMotion) {
+      setScreenShake(true);
+      setTimeout(() => setScreenShake(false), 240);
+    }
+
     updateAgentState("TARGET_RECEIVE", dest.tool.impactLog, dest.tool);
     addLog(`IMPACT REGISTERED: ${dest.tool.impactLog}`);
 
@@ -213,7 +248,7 @@ export default function Home() {
         }, 300);
       }, 350);
     }, 150);
-  }, [activeProjectile, updateAgentState, addLog]);
+  }, [activeProjectile, reducedMotion, updateAgentState, addLog]);
 
   // --- CLOSE MODAL HANDLER ---
   const handleCloseModal = useCallback(() => {
@@ -238,7 +273,11 @@ export default function Home() {
   }, [handleNodeSelect]);
 
   return (
-    <main className="relative w-full min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between overflow-x-hidden selection:bg-cyan-500 selection:text-black">
+    <main
+      className={`relative w-full min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between overflow-x-hidden selection:bg-cyan-500 selection:text-black ${
+        screenShake ? "animate-impact-shake" : ""
+      }`}
+    >
       {/* Background Cybernetic Grid & Atmospheric Glows */}
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-cyan-950/20 via-slate-950 to-black pointer-events-none" />
       <div className="fixed inset-0 bg-[linear-gradient(to_right,#00f0ff08_1px,transparent_1px),linear-gradient(to_bottom,#00f0ff08_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none" />
@@ -262,6 +301,7 @@ export default function Home() {
           setSoundMuted(next);
         }}
         systemStatus={agentState === "IDLE" ? "NOMINAL" : "ENGAGED"}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
       />
 
       {/* Central Operating Theater */}
@@ -362,6 +402,29 @@ export default function Home() {
           {activeModalDest.id === "assistant" && <AIAssistantSection />}
         </SectionModal>
       )}
+
+      {/* Command Palette Quick Search Overlay */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onSelectDestination={(dest) => {
+          const defaultRect = {
+            left: typeof window !== "undefined" ? window.innerWidth / 2 - 100 : 200,
+            top: typeof window !== "undefined" ? window.innerHeight / 2 - 100 : 200,
+            width: 200,
+            height: 80,
+          } as DOMRect;
+          handleNodeSelect(dest, defaultRect);
+        }}
+        onToggleReducedMotion={() => setReducedMotion((prev) => !prev)}
+        onToggleSound={() => {
+          const next = soundEngine.toggleMute();
+          setSoundMuted(next);
+        }}
+        onQuickDispatch={handleQuickDispatch}
+        reducedMotion={reducedMotion}
+        soundMuted={soundMuted}
+      />
 
       {/* Global Tactical Footer Bar */}
       <footer className="w-full border-t border-slate-900 bg-black/80 px-4 sm:px-8 py-2.5 flex items-center justify-between text-[10px] font-mono text-slate-400 select-none z-20">

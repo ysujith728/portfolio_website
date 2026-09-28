@@ -120,6 +120,10 @@ export const AgentCanvas: React.FC<AgentCanvasProps> = ({
       roughness: 0.2,
     });
 
+    // Dynamic accent materials (will lerp with target tool color)
+    const currentAccentColor = new THREE.Color(0x00f0ff);
+    const targetAccentColor = new THREE.Color(0x00f0ff);
+
     const cyanEmissive = new THREE.MeshStandardMaterial({
       color: 0x00f0ff,
       emissive: 0x00f0ff,
@@ -404,10 +408,54 @@ export const AgentCanvas: React.FC<AgentCanvasProps> = ({
     };
     window.addEventListener("mousemove", onMouseMove);
 
+    // --- INTERACTIVE 3D DRAG ORBIT ---
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let orbitTargetY = 0;
+    let orbitTargetX = 0;
+    let orbitCurrentY = 0;
+    let orbitCurrentX = 0;
+
+    const onPointerDown = (e: PointerEvent) => {
+      isDragging = true;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      canvas.setPointerCapture(e.pointerId);
+    };
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (!isDragging) return;
+      const deltaX = e.clientX - dragStartX;
+      const deltaY = e.clientY - dragStartY;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+
+      orbitTargetY += deltaX * 0.008;
+      orbitTargetX += deltaY * 0.006;
+
+      // Clamp rotation angles so robot stays upright
+      orbitTargetY = THREE.MathUtils.clamp(orbitTargetY, -1.2, 1.2);
+      orbitTargetX = THREE.MathUtils.clamp(orbitTargetX, -0.35, 0.35);
+    };
+
+    const onPointerUp = (e: PointerEvent) => {
+      isDragging = false;
+      try {
+        canvas.releasePointerCapture(e.pointerId);
+      } catch {}
+    };
+
+    canvas.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerUp);
+
     // --- ANIMATION LOOP ---
     let animationFrameId: number;
     const clock = new THREE.Clock();
     let throwAnimationProgress = 0;
+    let gestureTimer = 0;
 
     const handWorldPos = new THREE.Vector3();
 
@@ -417,18 +465,47 @@ export const AgentCanvas: React.FC<AgentCanvasProps> = ({
       const currentState = stateRef.current;
       const curTool = activeToolRef.current;
 
+      // --- DYNAMIC ACCENT COLOR SYNCING ---
+      if (curTool && curTool.color) {
+        targetAccentColor.set(curTool.color);
+      } else {
+        targetAccentColor.set(0x00f0ff);
+      }
+      currentAccentColor.lerp(targetAccentColor, 0.08);
+
+      // Apply synced color across neon emitters
+      cyanEmissive.color.copy(currentAccentColor);
+      cyanEmissive.emissive.copy(currentAccentColor);
+      visorMaterial.color.copy(currentAccentColor);
+      visorMaterial.emissive.copy(currentAccentColor);
+      ringMat1.color.copy(currentAccentColor);
+      coreLight.color.copy(currentAccentColor);
+      rimLight.color.copy(currentAccentColor);
+
       // Update tool glow material color if active
       if (curTool) {
-        toolGlowMaterial.color.set(curTool.color);
-        toolGlowMaterial.emissive.set(curTool.color);
+        toolGlowMaterial.color.copy(currentAccentColor);
+        toolGlowMaterial.emissive.copy(currentAccentColor);
       }
+
+      // --- ORBIT SPRING & DAMPING ---
+      if (!isDragging) {
+        // Smoothly spring return to default center
+        orbitTargetY = THREE.MathUtils.lerp(orbitTargetY, 0, 0.04);
+        orbitTargetX = THREE.MathUtils.lerp(orbitTargetX, 0, 0.04);
+      }
+      orbitCurrentY = THREE.MathUtils.lerp(orbitCurrentY, orbitTargetY, 0.15);
+      orbitCurrentX = THREE.MathUtils.lerp(orbitCurrentX, orbitTargetX, 0.15);
+
+      robotRoot.rotation.y = orbitCurrentY;
+      robotRoot.rotation.x = orbitCurrentX;
 
       // Rotate pedestal rings
       ring1.rotation.z = elapsedTime * 0.4;
       ring2.rotation.z = -elapsedTime * 0.7;
 
       // Pulse reactor core
-      const corePulse = 1.8 + Math.sin(elapsedTime * 4) * 0.8;
+      const corePulse = 2.0 + Math.sin(elapsedTime * 4) * 0.9;
       cyanEmissive.emissiveIntensity = corePulse;
       coreCrystal.rotation.y = elapsedTime * 1.5;
       coreCrystal.rotation.z = elapsedTime * 0.8;
@@ -441,6 +518,7 @@ export const AgentCanvas: React.FC<AgentCanvasProps> = ({
       // --- STATE & KINEMATICS MACHINE ---
       if (currentState === "IDLE" || currentState === "SCANNING") {
         throwAnimationProgress = 0;
+        gestureTimer = 0;
         toolHoloMesh.visible = false;
 
         // Subtle head tracking
@@ -454,6 +532,7 @@ export const AgentCanvas: React.FC<AgentCanvasProps> = ({
         rightShoulderPivot.rotation.y = THREE.MathUtils.lerp(rightShoulderPivot.rotation.y, 0, 0.08);
         rightShoulderPivot.rotation.z = THREE.MathUtils.lerp(rightShoulderPivot.rotation.z, -0.15, 0.08);
         rightForearmGroup.rotation.x = THREE.MathUtils.lerp(rightForearmGroup.rotation.x, 0.2, 0.08);
+        rightHand.rotation.x = THREE.MathUtils.lerp(rightHand.rotation.x, 0, 0.1);
       } else if (
         currentState === "HOVER_TARGET" ||
         currentState === "TARGET_LOCK" ||
@@ -531,11 +610,20 @@ export const AgentCanvas: React.FC<AgentCanvasProps> = ({
         rightForearmGroup.rotation.x = THREE.MathUtils.lerp(rightForearmGroup.rotation.x, 0.2, 0.05);
       } else if (currentState === "RETURN_IDLE") {
         toolHoloMesh.visible = false;
+        gestureTimer += 0.06;
+
+        // Tactical nod confirmation
+        const nodTarget = gestureTimer < 0.8 ? Math.sin(gestureTimer * Math.PI) * 0.2 : 0;
+        headGroup.rotation.x = THREE.MathUtils.lerp(headGroup.rotation.x, nodTarget, 0.15);
+        headGroup.rotation.y = THREE.MathUtils.lerp(headGroup.rotation.y, 0, 0.08);
+
+        // Tactile wrist flick
+        const flickTarget = gestureTimer < 0.6 ? -Math.sin(gestureTimer * Math.PI * 1.5) * 0.3 : 0;
+        rightHand.rotation.x = THREE.MathUtils.lerp(rightHand.rotation.x, flickTarget, 0.2);
+
         rightShoulderPivot.rotation.x = THREE.MathUtils.lerp(rightShoulderPivot.rotation.x, 0.1, 0.08);
         rightShoulderPivot.rotation.y = THREE.MathUtils.lerp(rightShoulderPivot.rotation.y, 0, 0.08);
         rightShoulderPivot.rotation.z = THREE.MathUtils.lerp(rightShoulderPivot.rotation.z, -0.15, 0.08);
-        headGroup.rotation.y = THREE.MathUtils.lerp(headGroup.rotation.y, 0, 0.08);
-        headGroup.rotation.x = THREE.MathUtils.lerp(headGroup.rotation.x, 0, 0.08);
       }
 
       // Compute hand position in screen coordinates and notify parent
@@ -569,6 +657,10 @@ export const AgentCanvas: React.FC<AgentCanvasProps> = ({
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("resize", handleResize);
+      canvas.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerUp);
 
       // Dispose Three.js objects cleanly
       scene.traverse((obj) => {
@@ -599,9 +691,15 @@ export const AgentCanvas: React.FC<AgentCanvasProps> = ({
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-full min-h-[380px] md:min-h-[480px] flex items-center justify-center select-none pointer-events-none"
+      className="relative w-full h-full min-h-[380px] md:min-h-[480px] flex items-center justify-center select-none pointer-events-auto cursor-grab active:cursor-grabbing group"
+      title="Click and drag to rotate robot in 3D space"
     >
-      <canvas ref={canvasRef} className="w-full h-full block" />
+      <canvas ref={canvasRef} className="w-full h-full block touch-none" />
+      {/* Subtle interaction cue on hover */}
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 font-mono text-[9px] text-cyan-400/50 group-hover:text-cyan-400 bg-slate-950/80 px-2.5 py-0.5 rounded-full border border-cyan-500/20 backdrop-blur-sm pointer-events-none transition-all opacity-0 group-hover:opacity-100 flex items-center gap-1.5 shadow-[0_0_10px_rgba(0,240,255,0.2)]">
+        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+        <span>3D ORBIT ACTIVE • DRAG TO ROTATE</span>
+      </div>
     </div>
   );
 };

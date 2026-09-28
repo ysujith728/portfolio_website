@@ -213,28 +213,178 @@ export const ToolProjectile: React.FC<ToolProjectileProps> = ({
             transform: `translate3d(${currentCoord.x}px, ${currentCoord.y}px, 0) rotate(${currentCoord.angle}rad)`,
           }}
         >
-          {/* Tool Mesh Hologram Representation */}
-          <div
-            className="relative flex items-center justify-center w-12 h-12 rounded-xl backdrop-blur-md border border-cyan-400/80 shadow-2xl animate-spin"
-            style={{
-              backgroundColor: `${tool.color}33`,
-              boxShadow: `0 0 25px ${tool.color}, inset 0 0 15px ${tool.color}`,
-              animationDuration: "2s",
-            }}
-          >
-            <span
-              className="text-xl font-mono font-bold select-none drop-shadow-[0_0_8px_white]"
-              style={{ color: "#ffffff" }}
-            >
-              {tool.glyph}
-            </span>
+          {/* Tool Mesh Hologram Representation according to tool.type */}
+          {tool.type === "cube" && (
+            <div className="relative w-14 h-14 flex items-center justify-center animate-spin" style={{ animationDuration: "3s" }}>
+              {/* Isometric Data Cube */}
+              <div
+                className="w-10 h-10 rounded-lg border-2 border-cyan-400 bg-cyan-950/70 shadow-[0_0_25px_#00f0ff] backdrop-blur-md flex items-center justify-center rotate-45 transform"
+                style={{
+                  borderColor: tool.color,
+                  boxShadow: `0 0 30px ${tool.color}, inset 0 0 15px ${tool.color}`,
+                }}
+              >
+                <span className="-rotate-45 font-mono font-black text-white text-base drop-shadow-[0_0_6px_white]">
+                  {tool.glyph}
+                </span>
+              </div>
+              <div
+                className="absolute inset-0 rounded-lg border border-dashed border-cyan-300/60 animate-ping"
+                style={{ animationDuration: "1.2s" }}
+              />
+            </div>
+          )}
 
-            {/* Orbiting data rings */}
-            <div
-              className="absolute inset-0 rounded-full border border-dashed border-white/60 animate-ping"
-              style={{ animationDuration: "1s" }}
-            />
-          </div>
+          {tool.type === "chip" && (
+            <div className="relative w-14 h-14 flex items-center justify-center animate-spin" style={{ animationDuration: "4s" }}>
+              {/* Cybernetic Microchip */}
+              <div
+                className="w-11 h-11 rounded-sm border-2 bg-emerald-950/80 backdrop-blur-md flex items-center justify-center relative shadow-lg"
+                style={{
+                  borderColor: tool.color,
+                  boxShadow: `0 0 28px ${tool.color}`,
+                }}
+              >
+                {/* Microchip Pins */}
+                <div className="absolute -top-1 inset-x-2 flex justify-between">
+                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                </div>
+                <div className="absolute -bottom-1 inset-x-2 flex justify-between">
+                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                  <span className="w-1 h-1 bg-amber-400 rounded-full" />
+                </div>
+                <span className="font-mono font-black text-emerald-200 text-sm">
+                  {tool.glyph}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {tool.type === "capsule" && (
+            <div className="relative w-16 h-10 flex items-center justify-center">
+              {/* Container Capsule */}
+              <div
+                className="w-14 h-8 rounded-full border-2 bg-blue-950/70 backdrop-blur-md flex items-center justify-between px-2.5"
+                style={{
+                  borderColor: tool.color,
+                  boxShadow: `0 0 30px ${tool.color}, inset 0 0 15px ${tool.color}`,
+                }}
+              >
+                <div className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+                <span className="font-mono font-bold text-white text-xs">
+                  {tool.glyph}
+                </span>
+                <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+              </div>
+            </div>
+          )}
+
+          {tool.type === "beacon" && (
+            <div className="relative w-14 h-14 flex items-center justify-center">
+              {/* Gyroscopic Telemetry Beacon */}
+              <div
+                className="absolute inset-0 rounded-full border-2 border-dashed animate-spin"
+                style={{ borderColor: tool.color, animationDuration: "2s" }}
+              />
+              <div
+                className="w-8 h-8 rounded-full border border-white/80 bg-amber-950/80 flex items-center justify-center shadow-[0_0_20px_#f59e0b]"
+                style={{
+                  boxShadow: `0 0 25px ${tool.color}`,
+                }}
+              >
+                <span className="font-mono font-bold text-amber-200 text-xs">
+                  {tool.glyph}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {tool.type === "core" && (
+            <div className="relative w-14 h-14 flex items-center justify-center animate-spin" style={{ animationDuration: "2.5s" }}>
+              {/* Quantum Core */}
+              <div
+                className="w-10 h-10 rounded-2xl rotate-12 border-2 bg-purple-950/80 flex items-center justify-center backdrop-blur-md"
+                style={{
+                  borderColor: tool.color,
+                  boxShadow: `0 0 30px ${tool.color}, inset 0 0 12px ${tool.color}`,
+                }}
+              >
+                <span className="-rotate-12 font-mono font-bold text-purple-200 text-sm">
+                  {tool.glyph}
+                </span>
+              </div>
+              <div
+                className="absolute inset-0 rounded-full border border-purple-400/50 animate-ping"
+                style={{ animationDuration: "1s" }}
+              />
+            </div>
+          )}
+
+          {tool.type === "prism" && (
+            <div className="relative w-14 h-14 flex items-center justify-center animate-pulse">
+              {/* Refraction Prism */}
+              <div
+                className="w-11 h-11 border-2 border-yellow-400 bg-yellow-950/80 flex items-center justify-center transform rotate-45 rounded-sm"
+                style={{
+                  borderColor: tool.color,
+                  boxShadow: `0 0 35px ${tool.color}`,
+                }}
+              >
+                <span className="-rotate-45 font-mono font-black text-yellow-100 text-xs">
+                  {tool.glyph}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {tool.type === "badge" && (
+            <div className="relative w-14 h-14 flex items-center justify-center">
+              {/* Verification Crest */}
+              <div
+                className="w-11 h-11 rounded-lg border-2 border-teal-400 bg-teal-950/80 flex items-center justify-center shadow-lg"
+                style={{
+                  borderColor: tool.color,
+                  boxShadow: `0 0 30px ${tool.color}`,
+                }}
+              >
+                <span className="font-mono font-black text-teal-200 text-xs">
+                  {tool.glyph}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Generic fallback for any other types */}
+          {tool.type !== "cube" &&
+            tool.type !== "chip" &&
+            tool.type !== "capsule" &&
+            tool.type !== "beacon" &&
+            tool.type !== "core" &&
+            tool.type !== "prism" &&
+            tool.type !== "badge" && (
+              <div
+                className="relative flex items-center justify-center w-12 h-12 rounded-xl backdrop-blur-md border border-cyan-400/80 shadow-2xl animate-spin"
+                style={{
+                  backgroundColor: `${tool.color}33`,
+                  boxShadow: `0 0 25px ${tool.color}, inset 0 0 15px ${tool.color}`,
+                  animationDuration: "2s",
+                }}
+              >
+                <span
+                  className="text-xl font-mono font-bold select-none drop-shadow-[0_0_8px_white]"
+                  style={{ color: "#ffffff" }}
+                >
+                  {tool.glyph}
+                </span>
+                <div
+                  className="absolute inset-0 rounded-full border border-dashed border-white/60 animate-ping"
+                  style={{ animationDuration: "1s" }}
+                />
+              </div>
+            )}
         </div>
       )}
 
